@@ -1,0 +1,677 @@
+<html><head>
+    <meta name="robots" content="noindex">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Pycaretを用いた売上予測</title><style>
+    /* cspell:disable-file */
+    /* webkit printing magic: print all background colors */
+    html {
+        -webkit-print-color-adjust: exact;
+    }
+    * {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    @media only screen {
+        body {
+            margin: 2em auto;
+            max-width: 900px;
+            color: rgb(55, 53, 47);
+        }
+    }
+    
+    body {
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+    
+    a,
+    a.visited {
+        color: inherit;
+        text-decoration: underline;
+    }
+    
+    .pdf-relative-link-path {
+        font-size: 80%;
+        color: #444;
+    }
+    
+    h1,
+    h2,
+    h3 {
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-top: 0;
+        margin-bottom: 0.75em;
+    }
+    
+    h1 {
+        font-size: 1.875rem;
+        margin-top: 1.875rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    h3 {
+        font-size: 1.25rem;
+        margin-top: 1.25rem;
+    }
+    
+    .source {
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 1.5em;
+        word-break: break-all;
+    }
+    
+    .callout {
+        border-radius: 3px;
+        padding: 1rem;
+    }
+    
+    figure {
+        margin: 1.25em 0;
+        page-break-inside: avoid;
+    }
+    
+    figcaption {
+        opacity: 0.5;
+        font-size: 85%;
+        margin-top: 0.5em;
+    }
+    
+    mark {
+        background-color: transparent;
+    }
+    
+    .indented {
+        padding-left: 1.5em;
+    }
+    
+    hr {
+        background: transparent;
+        display: block;
+        width: 100%;
+        height: 1px;
+        visibility: visible;
+        border: none;
+        border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+    }
+    
+    img {
+        max-width: 100%;
+    }
+    
+    @media only print {
+        img {
+            max-height: 100vh;
+            object-fit: contain;
+        }
+    }
+    
+    @page {
+        margin: 1in;
+    }
+    
+    .collection-content {
+        font-size: 0.875rem;
+    }
+    
+    .column-list {
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .column {
+        padding: 0 1em;
+    }
+    
+    .column:first-child {
+        padding-left: 0;
+    }
+    
+    .column:last-child {
+        padding-right: 0;
+    }
+    
+    .table_of_contents-item {
+        display: block;
+        font-size: 0.875rem;
+        line-height: 1.3;
+        padding: 0.125rem;
+    }
+    
+    .table_of_contents-indent-1 {
+        margin-left: 1.5rem;
+    }
+    
+    .table_of_contents-indent-2 {
+        margin-left: 3rem;
+    }
+    
+    .table_of_contents-indent-3 {
+        margin-left: 4.5rem;
+    }
+    
+    .table_of_contents-link {
+        text-decoration: none;
+        opacity: 0.7;
+        border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+    }
+    
+    table,
+    th,
+    td {
+        border: 1px solid rgba(55, 53, 47, 0.09);
+        border-collapse: collapse;
+    }
+    
+    table {
+        border-left: none;
+        border-right: none;
+    }
+    
+    th,
+    td {
+        font-weight: normal;
+        padding: 0.25em 0.5em;
+        line-height: 1.5;
+        min-height: 1.5em;
+        text-align: left;
+    }
+    
+    th {
+        color: rgba(55, 53, 47, 0.6);
+    }
+    
+    ol,
+    ul {
+        margin: 0;
+        margin-block-start: 0.6em;
+        margin-block-end: 0.6em;
+    }
+    
+    li > ol:first-child,
+    li > ul:first-child {
+        margin-block-start: 0.6em;
+    }
+    
+    ul > li {
+        list-style: disc;
+    }
+    
+    ul.to-do-list {
+        text-indent: -1.7em;
+    }
+    
+    ul.to-do-list > li {
+        list-style: none;
+    }
+    
+    .to-do-children-checked {
+        text-decoration: line-through;
+        opacity: 0.375;
+    }
+    
+    ul.toggle > li {
+        list-style: none;
+    }
+    
+    ul {
+        padding-inline-start: 1.7em;
+    }
+    
+    ul > li {
+        padding-left: 0.1em;
+    }
+    
+    ol {
+        padding-inline-start: 1.6em;
+    }
+    
+    ol > li {
+        padding-left: 0.2em;
+    }
+    
+    .mono ol {
+        padding-inline-start: 2em;
+    }
+    
+    .mono ol > li {
+        text-indent: -0.4em;
+    }
+    
+    .toggle {
+        padding-inline-start: 0em;
+        list-style-type: none;
+    }
+    
+    /* Indent toggle children */
+    .toggle > li > details {
+        padding-left: 1.7em;
+    }
+    
+    .toggle > li > details > summary {
+        margin-left: -1.1em;
+    }
+    
+    .selected-value {
+        display: inline-block;
+        padding: 0 0.5em;
+        background: rgba(206, 205, 202, 0.5);
+        border-radius: 3px;
+        margin-right: 0.5em;
+        margin-top: 0.3em;
+        margin-bottom: 0.3em;
+        white-space: nowrap;
+    }
+    
+    .collection-title {
+        display: inline-block;
+        margin-right: 1em;
+    }
+    
+    .simple-table {
+        margin-top: 1em;
+        font-size: 0.875rem;
+        empty-cells: show;
+    }
+    .simple-table td {
+        height: 29px;
+        min-width: 120px;
+    }
+    
+    .simple-table th {
+        height: 29px;
+        min-width: 120px;
+    }
+    
+    .simple-table-header-color {
+        background: rgb(247, 246, 243);
+        color: black;
+    }
+    .simple-table-header {
+        font-weight: 500;
+    }
+    
+    time {
+        opacity: 0.5;
+    }
+    
+    .icon {
+        display: inline-block;
+        max-width: 1.2em;
+        max-height: 1.2em;
+        text-decoration: none;
+        vertical-align: text-bottom;
+        margin-right: 0.5em;
+    }
+    
+    img.icon {
+        border-radius: 3px;
+    }
+    
+    .user-icon {
+        width: 1.5em;
+        height: 1.5em;
+        border-radius: 100%;
+        margin-right: 0.5rem;
+    }
+    
+    .user-icon-inner {
+        font-size: 0.8em;
+    }
+    
+    .text-icon {
+        border: 1px solid #000;
+        text-align: center;
+    }
+    
+    .page-cover-image {
+        display: block;
+        object-fit: cover;
+        width: 100%;
+        max-height: 30vh;
+    }
+    
+    .page-header-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .page-header-icon-with-cover {
+        margin-top: -0.72em;
+        margin-left: 0.07em;
+    }
+    
+    .page-header-icon img {
+        border-radius: 3px;
+    }
+    
+    .link-to-page {
+        margin: 1em 0;
+        padding: 0;
+        border: none;
+        font-weight: 500;
+    }
+    
+    p > .user {
+        opacity: 0.5;
+    }
+    
+    td > .user,
+    td > time {
+        white-space: nowrap;
+    }
+    
+    input[type="checkbox"] {
+        transform: scale(1.5);
+        margin-right: 0.6em;
+        vertical-align: middle;
+    }
+    
+    p {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+    
+    .image {
+        border: none;
+        margin: 1.5em 0;
+        padding: 0;
+        border-radius: 0;
+        text-align: center;
+    }
+    
+    .code,
+    code {
+        background: rgba(135, 131, 120, 0.15);
+        border-radius: 3px;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-size: 85%;
+        tab-size: 2;
+    }
+    
+    code {
+        color: #eb5757;
+    }
+    
+    .code {
+        padding: 1.5em 1em;
+    }
+    
+    .code-wrap {
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    
+    .code > code {
+        background: none;
+        padding: 0;
+        font-size: 100%;
+        color: inherit;
+    }
+    
+    blockquote {
+        font-size: 1.25em;
+        margin: 1em 0;
+        padding-left: 1em;
+        border-left: 3px solid rgb(55, 53, 47);
+    }
+    
+    .bookmark {
+        text-decoration: none;
+        max-height: 8em;
+        padding: 0;
+        display: flex;
+        width: 100%;
+        align-items: stretch;
+    }
+    
+    .bookmark-title {
+        font-size: 0.85em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 1.75em;
+        white-space: nowrap;
+    }
+    
+    .bookmark-text {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .bookmark-info {
+        flex: 4 1 180px;
+        padding: 12px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .bookmark-image {
+        width: 33%;
+        flex: 1 1 180px;
+        display: block;
+        position: relative;
+        object-fit: cover;
+        border-radius: 1px;
+    }
+    
+    .bookmark-description {
+        color: rgba(55, 53, 47, 0.6);
+        font-size: 0.75em;
+        overflow: hidden;
+        max-height: 4.5em;
+        word-break: break-word;
+    }
+    
+    .bookmark-href {
+        font-size: 0.75em;
+        margin-top: 0.25em;
+    }
+    
+    .sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+    .code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+    .serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+    .mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+    .pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+    .pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+    .pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+    .pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+    .pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+    .pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+    .pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+    .pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+    .pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+    .pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+    .pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+    .pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+    .pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+    .pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+    .pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+    .pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+    .highlight-default {
+        color: rgba(55, 53, 47, 1);
+    }
+    .highlight-gray {
+        color: rgba(120, 119, 116, 1);
+        fill: rgba(120, 119, 116, 1);
+    }
+    .highlight-brown {
+        color: rgba(159, 107, 83, 1);
+        fill: rgba(159, 107, 83, 1);
+    }
+    .highlight-orange {
+        color: rgba(217, 115, 13, 1);
+        fill: rgba(217, 115, 13, 1);
+    }
+    .highlight-yellow {
+        color: rgba(203, 145, 47, 1);
+        fill: rgba(203, 145, 47, 1);
+    }
+    .highlight-teal {
+        color: rgba(68, 131, 97, 1);
+        fill: rgba(68, 131, 97, 1);
+    }
+    .highlight-blue {
+        color: rgba(51, 126, 169, 1);
+        fill: rgba(51, 126, 169, 1);
+    }
+    .highlight-purple {
+        color: rgba(144, 101, 176, 1);
+        fill: rgba(144, 101, 176, 1);
+    }
+    .highlight-pink {
+        color: rgba(193, 76, 138, 1);
+        fill: rgba(193, 76, 138, 1);
+    }
+    .highlight-red {
+        color: rgba(212, 76, 71, 1);
+        fill: rgba(212, 76, 71, 1);
+    }
+    .highlight-gray_background {
+        background: rgba(241, 241, 239, 1);
+    }
+    .highlight-brown_background {
+        background: rgba(244, 238, 238, 1);
+    }
+    .highlight-orange_background {
+        background: rgba(251, 236, 221, 1);
+    }
+    .highlight-yellow_background {
+        background: rgba(251, 243, 219, 1);
+    }
+    .highlight-teal_background {
+        background: rgba(237, 243, 236, 1);
+    }
+    .highlight-blue_background {
+        background: rgba(231, 243, 248, 1);
+    }
+    .highlight-purple_background {
+        background: rgba(244, 240, 247, 0.8);
+    }
+    .highlight-pink_background {
+        background: rgba(249, 238, 243, 0.8);
+    }
+    .highlight-red_background {
+        background: rgba(253, 235, 236, 1);
+    }
+    .block-color-default {
+        color: inherit;
+        fill: inherit;
+    }
+    .block-color-gray {
+        color: rgba(120, 119, 116, 1);
+        fill: rgba(120, 119, 116, 1);
+    }
+    .block-color-brown {
+        color: rgba(159, 107, 83, 1);
+        fill: rgba(159, 107, 83, 1);
+    }
+    .block-color-orange {
+        color: rgba(217, 115, 13, 1);
+        fill: rgba(217, 115, 13, 1);
+    }
+    .block-color-yellow {
+        color: rgba(203, 145, 47, 1);
+        fill: rgba(203, 145, 47, 1);
+    }
+    .block-color-teal {
+        color: rgba(68, 131, 97, 1);
+        fill: rgba(68, 131, 97, 1);
+    }
+    .block-color-blue {
+        color: rgba(51, 126, 169, 1);
+        fill: rgba(51, 126, 169, 1);
+    }
+    .block-color-purple {
+        color: rgba(144, 101, 176, 1);
+        fill: rgba(144, 101, 176, 1);
+    }
+    .block-color-pink {
+        color: rgba(193, 76, 138, 1);
+        fill: rgba(193, 76, 138, 1);
+    }
+    .block-color-red {
+        color: rgba(212, 76, 71, 1);
+        fill: rgba(212, 76, 71, 1);
+    }
+    .block-color-gray_background {
+        background: rgba(241, 241, 239, 1);
+    }
+    .block-color-brown_background {
+        background: rgba(244, 238, 238, 1);
+    }
+    .block-color-orange_background {
+        background: rgba(251, 236, 221, 1);
+    }
+    .block-color-yellow_background {
+        background: rgba(251, 243, 219, 1);
+    }
+    .block-color-teal_background {
+        background: rgba(237, 243, 236, 1);
+    }
+    .block-color-blue_background {
+        background: rgba(231, 243, 248, 1);
+    }
+    .block-color-purple_background {
+        background: rgba(244, 240, 247, 0.8);
+    }
+    .block-color-pink_background {
+        background: rgba(249, 238, 243, 0.8);
+    }
+    .block-color-red_background {
+        background: rgba(253, 235, 236, 1);
+    }
+    .select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+    .select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+    .select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+    .select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+    .select-value-color-opaquegray { background-color: rgba(255, 255, 255, 0.0375); }
+    .select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+    .select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+    .select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+    .select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+    .select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+    
+    .checkbox {
+        display: inline-flex;
+        vertical-align: text-bottom;
+        width: 16;
+        height: 16;
+        background-size: 16px;
+        margin-left: 2px;
+        margin-right: 5px;
+    }
+    
+    .checkbox-on {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+    }
+    
+    .checkbox-off {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+    }
+        
+    </style></head><body><article id="42592296-1fb8-4925-8e9f-3b8a9880c86e" class="page sans"><header><img class="page-cover-image" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/zekkei.jpg" style="object-position:center 72.55%"/><h1 class="page-title">Pycaretを用いた売上予測</h1></header><div class="page-body"><p id="bb9bf08f-1b05-429f-a221-d4edcef73610" class="">
+    </p><h1 id="e1b5e18d-1654-4015-beaa-cdef3da9d8a8" class="">初めに</h1><p id="8d072412-634f-488a-b10e-599e58f0128f" class="">　私たち三年Ⅽ組課題研究２班は人工知能(通称AI)の及ぼす人への影響について研究してきた。</p><p id="d8b3e16d-211c-4888-baae-8614730ac8ae" class="">AIは年々進化していき、一般企業でもAIを用いた売上の予測や製造ラインの効率化がなどが行われておりその普及率も高まってきている。私たちは現在いかにAIを作るための機械学習を簡単に行えるのかを知ってもらうため、私たちの高校の売り上げデータを用いて実際に売上予測を行ってみることにした。</p><p id="38b49aed-19b8-4ac9-9883-97d949930eba" class="">
+    </p><p id="d8275350-b4ae-4404-849c-09aafa373aed" class="">目次</p><nav id="8c41d02c-1929-43b1-bc35-c58c6a5b5549" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#e1b5e18d-1654-4015-beaa-cdef3da9d8a8">初めに</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#dc26f1d5-e9b7-49c5-b4c9-d8d9bf8df7e5">使用環境</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#4b06f17b-3c8c-4b37-b7df-dc8e63a969c3">機械学習とは</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#ec673942-f1ad-48f3-82ff-72a6f9c75d0c">Pycaretとは</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#00f5f1c8-fe2e-4b2c-9995-65d0122b67e8">実際にやってみた</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#51719064-09ef-4e46-bb83-1f101c6bf6df">方法・作業の流れ</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#bebfe541-d9dc-4784-9e00-2dbc10bc49c1">準備したデータ</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#bd9d9075-564e-4aff-afcc-421a24d279ce">Pycaretのインストール</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#d1077290-f912-4c0d-88b2-2bae5eb04ccf">データの読み込み</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#91a693fd-7ff2-4c6e-ba1e-40f06b43ca7b">データを変数に代入</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#aa42bde6-7782-40c9-896b-1db8675eacd6">回帰モデルのインポート</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#b9c8f45f-b81b-49be-a3b7-d41fe334626d">最適なモデルを探す</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#c92a1a70-d9b3-43f5-8493-a5ba9a2b86c3">実行結果</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#739d80b6-6338-419c-85bb-f5f4a1d63229">結果の評価</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#6f114113-9b80-47eb-833a-b3f7e76fbbc6">活動のまとめ</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#d4ce9e67-8e01-4706-a54d-07026aac328e">最後に</a></div></nav><p id="0c847463-f878-44b4-a47b-d4ca5d20e621" class="">
+    </p><h1 id="dc26f1d5-e9b7-49c5-b4c9-d8d9bf8df7e5" class="">使用環境</h1><figure id="4c8aade8-b9bd-4fbb-bf40-51e6aab82765" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(2).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(2).png"/></a></figure><p id="0a454e39-41ff-425a-bc83-e2106884bcd7" class="">今回私たちはgoogle社が提供している”Google colaboratory”を用いて機械学習を行った。機械学習ライブラリーはPycaretを採用。</p><h1 id="4b06f17b-3c8c-4b37-b7df-dc8e63a969c3" class="">機械学習とは</h1><figure id="bd38b596-8a4c-4a11-80de-6ed433f77cab" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(1).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(1).png"/></a></figure><p id="180222e1-25b7-417f-9382-a517494a4d86" class="">　そもそも今回行った機械学習とは、学習データを用いて学習し、何らかのタスクをこなす人工知能のことで、人が学習する時と同様に”経験をもとに”学んでいくという特徴がある。</p><p id="bb7cead8-0e6d-4a75-aa2a-26cffd6467c9" class="">
+    </p><h1 id="ec673942-f1ad-48f3-82ff-72a6f9c75d0c" class="">Pycaretとは</h1><figure id="c96e57d6-9875-465c-9c79-f35cd3b0cedf" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(3).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(3).png"/></a></figure><p id="e674bc38-32f4-42f5-aad4-9595b7e519b0" class="">  　Pycaretとは、Pythonで実装されている機械学習のためのプログラムをまとめたものでこれを用いることで作業を円滑にかつ簡略的に行える。</p><h1 id="00f5f1c8-fe2e-4b2c-9995-65d0122b67e8" class="">実際にやってみた</h1><h2 id="51719064-09ef-4e46-bb83-1f101c6bf6df" class="">方法・作業の流れ</h2><figure id="9507ff8e-a043-45fb-a07a-d384d2c3c664" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(18).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(18).png"/></a></figure><p id="c008c7dd-fc89-4c8e-9061-dc99fe8cff4d" class="">方法は以上の通りだ</p><h2 id="bebfe541-d9dc-4784-9e00-2dbc10bc49c1" class="">準備したデータ</h2><figure id="30c20203-3095-4757-b67e-a2f2aff81812" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(19).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(19).png"/></a></figure><p id="72d64f09-999a-43f1-b8a7-a7a91558c2b5" class="">令和３年度のござえんちゃハウス・スーパーござえんちゃハウスの販売履歴のデータを利用。</p><h2 id="bd9d9075-564e-4aff-afcc-421a24d279ce" class="">Pycaretのインストール</h2><figure id="bcbcb4b7-586c-4913-b7fd-da7112891c7a" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(20).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(20).png"/></a></figure><p id="e6f2f4de-4f38-4296-a98d-b5a2a387583b" class="">コマンドプロンプトで上記のコードを入力し、PyCaretをインストール。</p><h2 id="d1077290-f912-4c0d-88b2-2bae5eb04ccf" class="">データの読み込み</h2><figure id="4a7cda02-e2f9-4c46-9ff8-c3e2ef90ede5" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(21).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(21).png"/></a></figure><p id="c17638da-3b35-4a2f-9829-89593a7c056a" class="">上記のコードで販売履歴のデータをまとめたファイルを読み込む。</p><h2 id="91a693fd-7ff2-4c6e-ba1e-40f06b43ca7b" class="">データを変数に代入</h2><figure id="43bf3bc6-ebb3-490f-bfb9-7e9999b8eff7" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(22).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(22).png"/></a></figure><p id="e7759a08-2234-49e1-aebc-4549fedb794a" class="">上記のコードで読み込んだデータを変数に代入する。</p><h2 id="aa42bde6-7782-40c9-896b-1db8675eacd6" class="">回帰モデルのインポート</h2><figure id="53e2c1b2-1e71-46c5-85c1-06b8fc796832" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(23).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(23).png"/></a></figure><p id="8d7b5f09-b95e-45f2-91d2-30346fe34d2f" class="">上記のコードで回帰モデルをインポートする。</p><h2 id="b9c8f45f-b81b-49be-a3b7-d41fe334626d" class="">最適なモデルを探す</h2><figure id="172a3661-e0e6-42b9-b6a5-cfa1b3f365a1" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(24).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(24).png"/></a></figure><p id="06130d90-d82b-4dd1-9b11-0d94836fb948" class="">インポートしたモデルのなかから最適なモデルを探す。</p><p id="bea410f3-3093-482b-a7a4-020e9bd9e89e" class="">
+    </p><h2 id="c92a1a70-d9b3-43f5-8493-a5ba9a2b86c3" class="">実行結果</h2><figure id="97f1a4b3-9dcc-4623-b933-3438c2aa3323" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(25).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(25).png"/></a></figure><p id="709154db-fca4-489a-9877-169a4b8388e2" class="">データをもとにジャンルと値段を照合させて売り上げる個数を予測した。</p><h2 id="739d80b6-6338-419c-85bb-f5f4a1d63229" class="">結果の評価</h2><figure id="c065e7a5-7c65-4f47-85cb-6d21255a2397" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(26).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(26).png"/></a></figure><p id="3f3577ad-8b5a-4171-a62d-943a23ae62e0" class="">今回の予測結果をグラフでまとめてみたが正解率は低く結果としては失敗に終わった。</p><p id="4ab4dfa7-44a1-45b4-a58b-7e264f949e52" class="">原因は複数あるためこれからそれを改善し正解率の向上を目指したい。</p><h2 id="6f114113-9b80-47eb-833a-b3f7e76fbbc6" class="">活動のまとめ</h2><figure id="168b9e7c-967b-4bf4-8787-0f0d128a26ec" class="image"><a href="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(27).png"><img style="width:1920px" src="Pycaret%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E5%A3%B2%E4%B8%8A%E4%BA%88%E6%B8%AC%20425922961fb849258e9f3b8a9880c86e/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_(27).png"/></a></figure><p id="528b2433-a7dd-4cf7-afe5-bfebff86e55a" class="">　</p><h1 id="d4ce9e67-8e01-4706-a54d-07026aac328e" class="">最後に</h1><p id="83d91ad9-ac6f-4628-ae4d-6cbbf22c6bc3" class="">　（ここにだいきの一言ください）</p><p id="e72a46b5-e717-4a25-b51d-37e33615a090" class="">また、今回私たちが行った機械学習を行うにあたって参考にしたサイトは<a href="https://scmopt.github.io/analytics/19pycaret.html">https://scmopt.github.io/analytics/19pycaret.html</a></p><p id="e9f51c01-d61c-4444-a770-bc6993f58d77" class="">こちらになります。ぜひ訪ねてみてください。</p><p id="363786d9-fc62-48c9-8b92-7ebf0e01e9b0" class="">
+    </p></div></article></body></html>
